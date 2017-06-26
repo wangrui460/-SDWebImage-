@@ -14,26 +14,13 @@
 
 @interface UIView (WebCacheOperation)
 
-/**
- *  Set the image load operation (storage in a UIView based dictionary)
- *
- *  @param operation the operation
- *  @param key       key for storing the operation
- */
+// 为当前view添加op对象，以key键
 - (void)sd_setImageLoadOperation:(nullable id)operation forKey:(nullable NSString *)key;
 
-/**
- *  Cancel all operations for the current UIView and key
- *
- *  @param key key for identifying the operations
- */
+// 先取消当前view中对应key的所有op对象，再将其删除
 - (void)sd_cancelImageLoadOperationWithKey:(nullable NSString *)key;
 
-/**
- *  Just remove the operations corresponding to the current UIView and key without cancelling them
- *
- *  @param key key for identifying the operations
- */
+// 直接删除（比上面的方法少一个取消的操作）
 - (void)sd_removeImageLoadOperationWithKey:(nullable NSString *)key;
 
 @end

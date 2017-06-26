@@ -100,6 +100,7 @@ typedef void(^SDWebImageNoParamsBlock)();
 extern NSString *const SDWebImageErrorDomain;
 
 // dispatch_queue_get_label() 获取队列的名字，如果队列没有名字，返回NULL
+// 如果当前是主进程，就直接执行block，否则把block放到主进程运行。为什么要判断是否是主进程？因为iOS上任何UI的操作都在主线程上执行，所以主进程还有一个名字，叫做“UI进程”。
 #ifndef dispatch_main_async_safe
 #define dispatch_main_async_safe(block)\
     if (strcmp(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), dispatch_queue_get_label(dispatch_get_main_queue())) == 0) {\

@@ -18,6 +18,7 @@ typedef NSMutableDictionary<NSString *, id> SDOperationsDictionary;
 
 @implementation UIView (WebCacheOperation)
 
+#pragma mark -  获取所有op对象的字典
 - (SDOperationsDictionary *)operationDictionary {
     SDOperationsDictionary *operations = objc_getAssociatedObject(self, &loadOperationKey);
     if (operations) {
@@ -28,6 +29,7 @@ typedef NSMutableDictionary<NSString *, id> SDOperationsDictionary;
     return operations;
 }
 
+#pragma mark - 为当前view添加op对象，以key键
 - (void)sd_setImageLoadOperation:(nullable id)operation forKey:(nullable NSString *)key {
     if (key) {
         [self sd_cancelImageLoadOperationWithKey:key];
@@ -38,8 +40,8 @@ typedef NSMutableDictionary<NSString *, id> SDOperationsDictionary;
     }
 }
 
+#pragma mark - 先取消当前view中对应key的所有op对象，再将其删除
 - (void)sd_cancelImageLoadOperationWithKey:(nullable NSString *)key {
-    // Cancel in progress downloader from queue
     SDOperationsDictionary *operationDictionary = [self operationDictionary];
     id operations = operationDictionary[key];
     if (operations) {
@@ -49,13 +51,15 @@ typedef NSMutableDictionary<NSString *, id> SDOperationsDictionary;
                     [operation cancel];
                 }
             }
-        } else if ([operations conformsToProtocol:@protocol(SDWebImageOperation)]){
+        }
+        else if ([operations conformsToProtocol:@protocol(SDWebImageOperation)]){
             [(id<SDWebImageOperation>) operations cancel];
         }
         [operationDictionary removeObjectForKey:key];
     }
 }
 
+#pragma mark - 直接删除（比上面的方法少一个取消的操作）
 - (void)sd_removeImageLoadOperationWithKey:(nullable NSString *)key {
     if (key) {
         SDOperationsDictionary *operationDictionary = [self operationDictionary];

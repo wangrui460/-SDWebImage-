@@ -35,32 +35,35 @@ static char TAG_ACTIVITY_SHOW;
                           progress:(nullable SDWebImageDownloaderProgressBlock)progressBlock
                          completed:(nullable SDExternalCompletionBlock)completedBlock
 {
-    // 获取可用的operationKey
+    // 1. 获取可用的operationKey
     NSString *validOperationKey = operationKey ?: NSStringFromClass([self class]);
-    // 取消该key对应的任务
+    // 2. 取消该key对应的任务
     [self sd_cancelImageLoadOperationWithKey:validOperationKey];
-    // 给该视图的实例对象设置一个属性
+    // 3. 给该视图的实例对象设置一个属性
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
-    // 如果options不为SDWebImageDelayPlaceholder，那么先把placeholder设置到该视图上
+    // 4. 如果options不为SDWebImageDelayPlaceholder，那么先把placeholder设置到该视图上
     if (!(options & SDWebImageDelayPlaceholder)) {  // &操作符，相同为1，不同为0
         dispatch_main_async_safe(^{
             [self sd_setImage:placeholder imageData:nil basedOnClassOrViaCustomSetImageBlock:setImageBlock];
         });
     }
     
-    if (url) {
-        // 如果有url，且设置显示ActivityIndicator，那么显示
+    // 5. 下面的操作是根据url来加载网络图片，分为有url有值和url无值的情况
+    if (url)
+    {
+        // 5.1 如果有url，且设置显示ActivityIndicator，那么显示
         if ([self sd_showActivityIndicatorView]) {
             [self sd_addActivityIndicator];
         }
         
         __weak __typeof(self)wself = self;
-        // ⚠️这里的operation不是继承自NSOperation的，我们可以把它看做一个关联视图操作的对象，我们称它为op对象
+        // ⚠️这里的operation可不是继承自NSOperation的对象，而是一个继承自NSObject的对象，你可以将它看做一个操作图片更新的对象，我们称它为op对象
+        // 然后通过SDWebImageManager的单例对象调用下面的方法，返回了一个名为operation的id类型的对象
         id <SDWebImageOperation> operation = [SDWebImageManager.sharedManager loadImageWithURL:url options:options progress:progressBlock completed:^(UIImage *image, NSData *data, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL)
         {
             __strong __typeof (wself) sself = wself;
-            // 图像下载成功后，移除ActivityIndicator
+            // 5.2 图像下载成功后，移除ActivityIndicator
             [sself sd_removeActivityIndicator];
             if (!sself) {
                 return;
@@ -69,26 +72,38 @@ static char TAG_ACTIVITY_SHOW;
                 if (!sself) {
                     return;
                 }
-                // 如果有image且options为SDWebImageAvoidAutoSetImage且有completedBlock
+                // 5.3 如果有image且options为SDWebImageAvoidAutoSetImage且有completedBlock
                 if (image && (options & SDWebImageAvoidAutoSetImage) && completedBlock) {
+                    // 在这里获取到图片，且做一些加工的操作
                     completedBlock(image, error, cacheType, url);
                     return;
-                } else if (image) {
+                }
+                else if (image) {
+                    // 5.4 如果有image，设置视图的图像
                     [sself sd_setImage:image imageData:data basedOnClassOrViaCustomSetImageBlock:setImageBlock];
+                    // 标记设为需要布局
                     [sself sd_setNeedsLayout];
-                } else {
+                }
+                else {
+                    // 5.5 image已经尝试获取过了，但是没有从网络端获取到，如果options为SDWebImageDelayPlaceholder，当前视图设置为占位图片
                     if ((options & SDWebImageDelayPlaceholder)) {
                         [sself sd_setImage:placeholder imageData:nil basedOnClassOrViaCustomSetImageBlock:setImageBlock];
+                        // 标记设为需要布局
                         [sself sd_setNeedsLayout];
                     }
                 }
+                // 5.6 有completedBlock且下载finished为yes，将需要的参数传出去
                 if (completedBlock && finished) {
                     completedBlock(image, error, cacheType, url);
                 }
             });
         }];
+        // 6. 将前面生成的op对象和最开始获取到的validOperationKey设置到对应的视图实例中
         [self sd_setImageLoadOperation:operation forKey:validOperationKey];
-    } else {
+    }
+    else
+    {
+        // 如果url为空，抛出错误
         dispatch_main_async_safe(^{
             [self sd_removeActivityIndicator];
             if (completedBlock) {
