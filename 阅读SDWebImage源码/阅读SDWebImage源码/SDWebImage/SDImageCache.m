@@ -53,6 +53,8 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 @property (strong, nonatomic, nonnull) NSCache *memCache;
 @property (strong, nonatomic, nonnull) NSString *diskCachePath;
 @property (strong, nonatomic, nullable) NSMutableArray<NSString *> *customPaths;
+// Create IO serial queue   创建一个IO串行队列
+//_ioQueue = dispatch_queue_create("com.hackemist.SDWebImageCache", DISPATCH_QUEUE_SERIAL);
 @property (SDDispatchQueueSetterSementics, nonatomic, nullable) dispatch_queue_t ioQueue;
 
 @end
@@ -362,6 +364,7 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 }
 
 - (nullable NSOperation *)queryCacheOperationForKey:(nullable NSString *)key done:(nullable SDCacheQueryCompletedBlock)doneBlock {
+    // 1. 如果key为nil，说明url不对，因此不执行后面的操作了，直接返回Operaion为nil。
     if (!key) {
         if (doneBlock) {
             doneBlock(nil, nil, SDImageCacheTypeNone);
@@ -369,20 +372,23 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
         return nil;
     }
 
-    // First check the in-memory cache...
+    // 2. 首先检查内存中key对应的缓存，返回图像
     UIImage *image = [self imageFromMemoryCacheForKey:key];
     if (image) {
         NSData *diskData = nil;
         if ([image isGIF]) {
             diskData = [self diskImageDataBySearchingAllPathsForKey:key];
         }
+        // 现在已经找到内存对应的图像缓存了，直接返回
         if (doneBlock) {
             doneBlock(image, diskData, SDImageCacheTypeMemory);
         }
         return nil;
     }
 
+    // 3. 如果内存中没有，现在检查磁盘的缓存
     NSOperation *operation = [NSOperation new];
+    // 新开一个串行队列 ioQueue，在里面执行下面的代码
     dispatch_async(self.ioQueue, ^{
         if (operation.isCancelled) {
             // do not call the completion if cancelled
@@ -390,13 +396,17 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
         }
 
         @autoreleasepool {
+            // 搜索磁盘缓存，将磁盘缓存加入内存缓存
             NSData *diskData = [self diskImageDataBySearchingAllPathsForKey:key];
             UIImage *diskImage = [self diskImageForKey:key];
+            // 如果取到了磁盘图像，且图片缓存配置shouldCacheImagesInMemory=YES，那么执行下面的操作
             if (diskImage && self.config.shouldCacheImagesInMemory) {
+                // 计算将图片缓存到内存中需要的开销大小，并根据key和大小将图片缓存到内存中
                 NSUInteger cost = SDCacheCostForImage(diskImage);
                 [self.memCache setObject:diskImage forKey:key cost:cost];
             }
 
+            // 在主线程执行对应的回调，这里的缓存类型是磁盘缓存
             if (doneBlock) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     doneBlock(diskImage, diskData, SDImageCacheTypeDisk);

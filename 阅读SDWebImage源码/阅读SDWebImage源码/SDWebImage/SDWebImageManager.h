@@ -34,9 +34,9 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageOptions) {
     SDWebImageProgressiveDownload = 1 << 3,
 
     /**
+     * 这个选项帮助处理在同样的网络请求地址下图片的改变
      * 即使图像缓存，也要遵守HTTP响应缓存控制，如果需要，可以从远程位置刷新图像
      * 磁盘缓存将由NSURLCache而不是SDWebImage处理，导致轻微的性能降低。
-     * 这个选项帮助处理在同样的网络请求地址下图片的改变
      * 如果刷新缓存的图像，完成的block会在使用缓存图像的时候调用，还会在最后的图像被调用
      * 当你不能使你的URL静态与嵌入式缓存
      */
@@ -150,8 +150,9 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
 
 @property (weak, nonatomic, nullable) id <SDWebImageManagerDelegate> delegate;
 
-@property (strong, nonatomic, readonly, nullable) SDImageCache *imageCache;
-@property (strong, nonatomic, readonly, nullable) SDWebImageDownloader *imageDownloader;
+// 包含下面两个单例对象
+@property (strong, nonatomic, readonly, nullable) SDImageCache *imageCache;                 // 负责缓存相关的操作
+@property (strong, nonatomic, readonly, nullable) SDWebImageDownloader *imageDownloader;    // 负责下载相关的操作
 
 /**
  * The cache filter is a block used each time SDWebImageManager need to convert an URL into a cache key. This can
@@ -185,13 +186,12 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
 - (nonnull instancetype)initWithCache:(nonnull SDImageCache *)cache downloader:(nonnull SDWebImageDownloader *)downloader NS_DESIGNATED_INITIALIZER;
 
 /**
- * Downloads the image at the given URL if not present in cache or return the cached version otherwise.
+ * 如果不存在于缓存中，就下载给定URL的图像，否则返回缓存的版本。
  *
  * @param url            The URL to the image
  * @param options        A mask to specify options to use for this request
- * @param progressBlock  A block called while image is downloading
- *                       @note the progress block is executed on a background queue
- * @param completedBlock A block called when operation has been completed.
+ * @param progressBlock  当图像下载中时调用的block，这个进程的回调是在一个后台队列执行
+ * @param completedBlock 当操作完成的回调，这个参数是必须的
  *
  *   This parameter is required.
  * 
@@ -207,7 +207,7 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
  *
  *   The last parameter is the original image URL
  *
- * @return Returns an NSObject conforming to SDWebImageOperation. Should be an instance of SDWebImageDownloaderOperation
+ * @return 返回一个遵循SDWebImageOperation的对象，应该是一个SDWebImageDownloaderOperation对象的实例
  */
 - (nullable id <SDWebImageOperation>)loadImageWithURL:(nullable NSURL *)url
                                               options:(SDWebImageOptions)options

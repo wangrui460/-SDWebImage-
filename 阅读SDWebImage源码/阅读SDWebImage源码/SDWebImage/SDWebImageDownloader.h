@@ -11,7 +11,9 @@
 #import "SDWebImageOperation.h"
 
 typedef NS_OPTIONS(NSUInteger, SDWebImageDownloaderOptions) {
+    // 下载优先权较低
     SDWebImageDownloaderLowPriority = 1 << 0,
+    // 渐进式下载图片（类似网页加载图片一样）
     SDWebImageDownloaderProgressiveDownload = 1 << 1,
 
     /**
@@ -21,15 +23,12 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageDownloaderOptions) {
     SDWebImageDownloaderUseNSURLCache = 1 << 2,
 
     /**
-     * Call completion block with nil image/imageData if the image was read from NSURLCache
-     * (to be combined with `SDWebImageDownloaderUseNSURLCache`).
-     * I think this option should be renamed to 'SDWebImageDownloaderUsingCachedResponseDontLoad'
+     * 忽略缓存图片
      */
     SDWebImageDownloaderIgnoreCachedResponse = 1 << 3,
     
     /**
-     * In iOS 4+, continue the download of the image if the app goes to background. This is achieved by asking the system for
-     * extra time in background to let the request finish. If the background task expires the operation will be cancelled.
+     * In iOS 4+, app可以在后台下载图片，不过需要询问用户是否同意. 如果后台任务过期，则操作取消.
      */
     SDWebImageDownloaderContinueInBackground = 1 << 4,
 
@@ -46,7 +45,7 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageDownloaderOptions) {
     SDWebImageDownloaderAllowInvalidSSLCertificates = 1 << 6,
 
     /**
-     * Put the image in the high priority queue.
+     * 优先下载队列.
      */
     SDWebImageDownloaderHighPriority = 1 << 7,
     
@@ -81,7 +80,7 @@ typedef NSMutableDictionary<NSString *, NSString *> SDHTTPHeadersMutableDictiona
 typedef SDHTTPHeadersDictionary * _Nullable (^SDWebImageDownloaderHeadersFilterBlock)(NSURL * _Nullable url, SDHTTPHeadersDictionary * _Nullable headers);
 
 /**
- *  A token associated with each download. Can be used to cancel a download
+ *  一个与每个下载关联的Token，可以用来取消下载
  */
 @interface SDWebImageDownloadToken : NSObject
 
