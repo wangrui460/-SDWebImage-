@@ -37,8 +37,10 @@ static char TAG_ACTIVITY_SHOW;
 {
     // 1. 获取可用的operationKey
     NSString *validOperationKey = operationKey ?: NSStringFromClass([self class]);
+    
     // 2. 取消该key对应的任务
     [self sd_cancelImageLoadOperationWithKey:validOperationKey];
+    
     // 3. 给该视图的实例对象设置一个属性
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
