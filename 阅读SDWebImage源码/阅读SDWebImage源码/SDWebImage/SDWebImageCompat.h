@@ -9,39 +9,43 @@
 
 #import <TargetConditionals.h>
 
+// SDWebImage不支持垃圾回收机制，垃圾回收(Gargage-collection)是Objective-c提供的一种自动内存回收机制。
+// 在iPad/iPhone环境中不支持垃圾回收功能。 当启动这个功能后，所有的retain,autorelease,release和dealloc方法都将被系统忽略。
 #ifdef __OBJC_GC__
     #error SDWebImage does not support Objective-C Garbage Collection
 #endif
 
-// Apple's defines from TargetConditionals.h are a bit weird.
-// Seems like TARGET_OS_MAC is always defined (on all platforms).
-// To determine if we are running on OSX, we can only relly on TARGET_OS_IPHONE=0 and all the other platforms
+
+// 该指令主要用于判断当前平台是不是MAC，单纯使用TARGET_OS_MAC是不靠谱的。这样判断的缺点是，当Apple出现新的平台时，判断条件要修改
 #if !TARGET_OS_IPHONE && !TARGET_OS_IOS && !TARGET_OS_TV && !TARGET_OS_WATCH
     #define SD_MAC 1
 #else
     #define SD_MAC 0
 #endif
 
-// iOS and tvOS are very similar, UIKit exists on both platforms
-// Note: watchOS also has UIKit, but it's very limited
+// iOS 和 tvOS 是非常相似的，UIKit在这两个平台中都存在，但是watchOS在使用UIKit时，是受限的。
+// 因此我们定义SD_UIKIT为真的条件是iOS 和 tvOS这两个平台。至于为什么要定义SD_UIKIT后边会解释的。
 #if TARGET_OS_IOS || TARGET_OS_TV
     #define SD_UIKIT 1
 #else
     #define SD_UIKIT 0
 #endif
 
+// iOS
 #if TARGET_OS_IOS
     #define SD_IOS 1
 #else
     #define SD_IOS 0
 #endif
 
+// tvOS
 #if TARGET_OS_TV
     #define SD_TV 1
 #else
     #define SD_TV 0
 #endif
 
+// watchOS
 #if TARGET_OS_WATCH
     #define SD_WATCH 1
 #else
@@ -61,10 +65,12 @@
         #define UIView NSView
     #endif
 #else
+    // SDWebImage不支持5.0以下的iOS版本
     #if __IPHONE_OS_VERSION_MIN_REQUIRED != 20000 && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_5_0
         #error SDWebImage doesn't support Deployment Target version < 5.0
     #endif
 
+    // SD_UIKIT为真时，导入UIKit，SD_WATCH为真时，导入WatchKit
     #if SD_UIKIT
         #import <UIKit/UIKit.h>
     #endif

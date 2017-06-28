@@ -11,14 +11,11 @@
 
 @interface UIImage (GIF)
 
-/**
- *  Compatibility method - creates an animated UIImage from an NSData, it will only contain the 1st frame image
- */
+
+// 通过NSData获取图片，但是获取的是第一帧图像
 + (UIImage *)sd_animatedGIFWithData:(NSData *)data;
 
-/**
- *  Checks if an UIImage instance is a GIF. Will use the `images` array
- */
+// 判断当前图片是不是gif图片
 - (BOOL)isGIF;
 
 @end
