@@ -25,7 +25,7 @@
 // 负责图片缓存相关操作
 @property (strong, nonatomic, readwrite, nonnull) SDImageCache *imageCache;
 
-// 负责图片现在相关操作
+// 负责图片下载相关操作
 @property (strong, nonatomic, readwrite, nonnull) SDWebImageDownloader *imageDownloader;
 
 // 用来存放下载失败的URL地址的数组
@@ -115,13 +115,13 @@
     }];
 }
 
-#pragma mark - 如果不存在于缓存中，请下载给定URL的图像，否则返回缓存的版本。
+#pragma mark - 如果不存在于缓存中，下载给定URL的图像，否则返回缓存的版本。
 - (id <SDWebImageOperation>)loadImageWithURL:(nullable NSURL *)url
                                      options:(SDWebImageOptions)options
                                     progress:(nullable SDWebImageDownloaderProgressBlock)progressBlock
                                    completed:(nullable SDInternalCompletionBlock)completedBlock
 {
-    // 如果调用这个方法，却没有设置completedBlock，是没有意义的
+    // 1. 如果调用这个方法，却没有设置completedBlock，是没有意义的
     NSAssert(completedBlock != nil, @"If you mean to prefetch the image, use -[SDWebImagePrefetcher prefetchURLs] instead");
 
     // 有时候xcode不会警告这个类型错误（将NSSTring当做NSURL），所以这里做一下容错
@@ -150,7 +150,7 @@
         }
     }
 
-    // 如果url的长度为0，或者url在失败的url列表中且下载的策略不为SDWebImageRetryFailed，那么就抛出错误，并return。
+    // 2. 如果url的长度为0，或者url在失败的url列表中且下载的策略不为SDWebImageRetryFailed，那么就抛出错误，并return。
     if (url.absoluteString.length == 0 || (!(options & SDWebImageRetryFailed) && isFailedUrl)) {
         // 这里做的就是抛出错误,文件不存在(NSURLErrorFileDoesNotExist)
         [self callCompletionBlockForOperation:operation completion:completedBlock error:[NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorFileDoesNotExist userInfo:nil] url:url];

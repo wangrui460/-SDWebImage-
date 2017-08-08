@@ -35,10 +35,10 @@ static char TAG_ACTIVITY_SHOW;
                           progress:(nullable SDWebImageDownloaderProgressBlock)progressBlock
                          completed:(nullable SDExternalCompletionBlock)completedBlock
 {
-    // 1. 获取可用的operationKey
+    // 1. 获取可用的 operationKey
     NSString *validOperationKey = operationKey ?: NSStringFromClass([self class]);
     
-    // 2. 取消该key对应的任务
+    // 2. 取消该 operationKey 对应的任务
     [self sd_cancelImageLoadOperationWithKey:validOperationKey];
     
     // 3. 给该视图的实例对象设置一个属性
@@ -51,7 +51,7 @@ static char TAG_ACTIVITY_SHOW;
         });
     }
     
-    // 5. 下面的操作是根据url来加载网络图片，分为有url有值和url无值的情况
+    // 5. 下面的操作是根据url来加载网络图片，分为url有值和url无值的情况
     if (url)
     {
         // 5.1 如果有url，且设置显示ActivityIndicator，那么显示
@@ -100,7 +100,7 @@ static char TAG_ACTIVITY_SHOW;
                 }
             });
         }];
-        // 6. 将前面生成的op对象和最开始获取到的validOperationKey设置到对应的视图实例中
+        // 6. 将前面生成的op对象添加到保存所有op对象的 SDOperationsDictionary 字典中
         [self sd_setImageLoadOperation:operation forKey:validOperationKey];
     }
     else

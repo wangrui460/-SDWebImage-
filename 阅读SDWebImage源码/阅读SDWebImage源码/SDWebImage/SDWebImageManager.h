@@ -34,7 +34,7 @@ typedef NS_OPTIONS(NSUInteger, SDWebImageOptions) {
     SDWebImageProgressiveDownload = 1 << 3,
 
     /**
-     * 这个选项帮助处理在同样的网络请求地址下图片的改变
+     * 这个选项帮助处理在同样的网络请求地址下图片的改变（处理图像地址没变，但是实际图片变了的情况）
      * 即使图像缓存，也要遵守HTTP响应缓存控制，如果需要，可以从远程位置刷新图像
      * 磁盘缓存将由NSURLCache而不是SDWebImage处理，导致轻微的性能降低。
      * 如果刷新缓存的图像，完成的block会在使用缓存图像的时候调用，还会在最后的图像被调用

@@ -40,6 +40,7 @@
     [self sd_setImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:completedBlock];
 }
 
+#pragma mark - 全能初始化方法
 - (void)sd_setImageWithURL:(nullable NSURL *)url
           placeholderImage:(nullable UIImage *)placeholder
                    options:(SDWebImageOptions)options
